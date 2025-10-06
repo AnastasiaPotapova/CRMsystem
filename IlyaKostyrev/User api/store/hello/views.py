@@ -1,21 +1,15 @@
 import json
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+import uuid 
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import User
 from django.views.decorators.csrf import csrf_exempt
+
 def index(request):
     return HttpResponse("Hello, world. You're at the hello index.")
 
-    # if request.method =="POST":
-    #     post=register()
-    #     post.email=request.POST['email']
-    #     post.password=request.POST['password']
-    #     post.save()
-    #     return render(request, 'template/requstration.html')    
-    # else:
-# filepath: c:\Users\kosty\OneDrive\Рабочий стол\Store - Django\store\hello\views.py
-def registration(request):
-    return render(request, 'hello/reg.html')         
+
+       
 
 def parse_json(request):
     try:
@@ -30,9 +24,10 @@ def user_create(request):
         data = parse_json(request)
         if not data:
             return HttpResponseBadRequest('Ошибка парсинга JSON')
-        if User.objects.filter(card_id=data.get('card_id')).exists():
-            return HttpResponseBadRequest('Пользователь с таким card_id уже существует')
+        if User.objects.filter(card_id=data.get('card_id')).exists() or User.objects.filter(td_username=data.get('td_username')).exists():
+            return HttpResponseBadRequest('Пользователь с таким card_id или td_username уже существует')
         user = User.objects.create(
+            id= uuid.uuid4(),
             role=data.get('role'),
             card_id=data.get('card_id'),
             td_username=data.get('td_username'),
