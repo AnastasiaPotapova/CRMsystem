@@ -99,7 +99,7 @@ class Poll(Base):
     excursions = relationship("Excursion", back_populates="poll")
 
     def __repr__(self):
-        return f"Опрос за {self.week_start}-{self.week_end}"
+        return f"Опрос за {self.week_start}-{self.week_end} с {len(self.excursions)} экскурсиями"
 
 class PollManager:
     def __init__(self):
