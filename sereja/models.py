@@ -13,9 +13,9 @@ class Excursion(Base):
     __tablename__ = "Excursions"
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date)
+    date = Column(DateTime)
     n_visitors = Column(Integer)
-    guide = Column(String, nullable=True)  #потом связь с юзером прикрутим
+    guide = Column(String,default="not defined", nullable=True)  #потом связь с юзером прикрутим
     phone = Column(String)
 
     poll = relationship("Poll", back_populates="excursions")
@@ -27,9 +27,9 @@ class ExcursionManager:
     def __init__(self):
         self.session = Session()
 
-    def post(self, date, n_visitors, guide, phone):
+    def post(self, date, n_visitors, phone):
         """Добавить экскурсию"""
-        excursion = Excursion(date=date, n_visitors=n_visitors, guide=guide, phone=phone)
+        excursion = Excursion(date=date, n_visitors=n_visitors,phone=phone)
         self.session.add(excursion)
         try:
             self.session.commit()
@@ -123,6 +123,11 @@ class PollManager:
             self.session.rollback()
             print("[ERR]", e)
 
+    def get(self,poll_id):
+        return self.session.query(Poll).filter_by(id=poll_id).first()
+
+    def get_all(self):
+        return self.session.query(Poll).all()
 
 # Создаем таблицы
 Base.metadata.create_all(engine)
