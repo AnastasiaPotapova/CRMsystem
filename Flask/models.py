@@ -8,7 +8,6 @@ engine = create_engine("sqlite:///users.db", echo=False)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 
-
 class Excursion(Base):
     __tablename__ = "Excursions"
 
