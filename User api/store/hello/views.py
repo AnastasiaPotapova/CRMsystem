@@ -10,12 +10,6 @@ from hello.models import Visit
 from .models import User
 from django.db import IntegrityError
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the hello index.")
-
-
-       
-
 def parse_json(request):
     try:
         return json.loads(request.body.decode('utf-8'))
@@ -53,6 +47,8 @@ def user_create(request):
 # READ (list)
 @csrf_exempt
 def user_list(request):
+    if request.method != 'GET':
+        return HttpResponseBadRequest('Только GET запрос')
     users = User.objects.all()
     result = []
     for u in users:
@@ -69,6 +65,9 @@ def user_list(request):
 
 # READ (detail)
 def user_detail(request, pk):
+    if request.method != 'GET':
+        return HttpResponseBadRequest('Только GET запрос')
+
     user = get_object_or_404(User, pk=pk)
     return JsonResponse({
         'id': str(user.id),
@@ -84,7 +83,7 @@ def user_detail(request, pk):
 @csrf_exempt
 def user_update(request, pk):
     user = get_object_or_404(User, pk=pk)
-    if request.method == 'POST':
+    if request.method == 'UPDATE':
         data = parse_json(request)
         if not data:
             return HttpResponseBadRequest('Ошибка парсинга JSON')
@@ -116,17 +115,18 @@ def user_update(request, pk):
             'fullname': user.fullname,
             'visit_count': user.visit_count
         })
-    return HttpResponseBadRequest('Только POST запрос')
+    return HttpResponseBadRequest('Только UPDATE запрос')
 
 # DELETE
 @csrf_exempt
 def user_delete(request, pk):
     user = get_object_or_404(User, pk=pk)
-    if request.method == 'POST':
+    if request.method == 'DELETE':
         user.delete()
         return JsonResponse({'result': 'deleted'})
-    return HttpResponseBadRequest('Только POST запрос')    
+    return HttpResponseBadRequest('Только DELETE запрос')
 
+# Создание нового посещения
 @csrf_exempt
 def visit_create(request):
     if(request.method == 'POST'):
@@ -154,8 +154,10 @@ def visit_create(request):
         return JsonResponse({ 'user_id': str(visit.user.id), 'visited_at': visit.visited_at.isoformat() })
     return HttpResponseBadRequest('Только POST запрос.')
 
+# Получение списка всех посещений
 @csrf_exempt
 def visit_list_all(request):
+    if request.method != 'GET':
        visits = Visit.objects.select_related('user').all().order_by('-visited_at')
        visits_list = []
        for visit in visits:
@@ -167,7 +169,9 @@ def visit_list_all(request):
                'visited_at': visit.visited_at.isoformat()
            })
        return JsonResponse(visits_list, safe=False)
+    return HttpResponseBadRequest('Только GET запрос')
 
+# Получение списка посещений по user_id
 @csrf_exempt
 def visit_list_by_user(request, user_id):
     if request.method != 'GET':
@@ -181,6 +185,8 @@ def visit_list_by_user(request, user_id):
     } for v in visits]
     return JsonResponse(result, safe=False)   
 
+# Получение fullname по td_username
+@csrf_exempt
 def getname(request, tg_username):
     if request.method != 'GET':
         return HttpResponseBadRequest('Только GET запрос')
@@ -190,6 +196,7 @@ def getname(request, tg_username):
     else:
         return HttpResponseBadRequest('Пользователь не найден')
 
+# Получение списка посещений за указанный месяц и год, с опциональной фильтрацией по user_id
 @csrf_exempt
 def visit_list_month(request):
     """
@@ -238,3 +245,12 @@ def visit_list_month(request):
         })
 
     return JsonResponse(result, safe=False)
+
+# Удаление посещения
+@csrf_exempt
+def visit_delete(request, visit_id):
+    visit = get_object_or_404(Visit, pk=visit_id)
+    if request.method == 'DELETE':
+        visit.delete()
+        return JsonResponse({'status': 'success'})
+    return HttpResponseBadRequest('Только DELETE запрос.')
